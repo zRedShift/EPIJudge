@@ -4,13 +4,15 @@
 #include "test_framework/test_failure.h"
 #include "test_framework/timed_executor.h"
 using std::shared_ptr;
-
+void Advance(shared_ptr<ListNode<int>> &l, int i) {
+  while (i--)
+    l = l->next;
+}
 shared_ptr<ListNode<int>> HasCycle(const shared_ptr<ListNode<int>> &head) {
-  auto dummy_head = make_shared<ListNode<int>>();
-  dummy_head->next = head;
   int i = 0;
-  auto fast = dummy_head, slow = dummy_head;
-  while ((fast = fast->next) && (fast = fast->next)) {
+  auto fast = head, slow = head;
+  while (fast && fast->next) {
+    fast = fast->next->next;
     if (slow != fast) {
       ++i;
       if (slow = slow->next; slow != fast)
@@ -21,18 +23,11 @@ shared_ptr<ListNode<int>> HasCycle(const shared_ptr<ListNode<int>> &head) {
       slow = slow->next;
       ++cycle;
     } while (slow != fast);
-    fast = dummy_head;
-    while (i < cycle) {
-      slow = slow->next;
-      ++i;
-    }
-    int j;
-    for (j = 0; j < i - cycle; ++j)
-      fast = fast->next;
+    fast = head;
+    i < cycle ? Advance(slow, cycle - i) : Advance(fast, i - cycle);
     while ((fast = fast->next) != (slow = slow->next)) continue;
-    return fast->next;
+    return fast;
   }
-
   return nullptr;
 }
 void HasCycleWrapper(TimedExecutor &executor,

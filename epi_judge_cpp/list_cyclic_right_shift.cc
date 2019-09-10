@@ -5,11 +5,22 @@ using std::shared_ptr;
 
 shared_ptr<ListNode<int>> CyclicallyRightShiftList(shared_ptr<ListNode<int>> L,
                                                    int k) {
-  // TODO - you fill in here.
-  return nullptr;
+  if (!L)
+    return nullptr;
+  auto node = L;
+  int len = 1;
+  while (node->next)
+    ++len, node = node->next;
+  node->next = L;
+  k = (len - k % len) % len;
+  while (k--)
+    node = node->next;
+  L = node->next;
+  node->next = nullptr;
+  return L;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"L", "k"};
   return GenericTestMain(

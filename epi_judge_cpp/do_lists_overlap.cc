@@ -4,13 +4,76 @@
 #include "test_framework/generic_test.h"
 #include "test_framework/test_failure.h"
 #include "test_framework/timed_executor.h"
-
-shared_ptr<ListNode<int>> OverlappingLists(shared_ptr<ListNode<int>> l0,
-                                           shared_ptr<ListNode<int>> l1) {
-  // TODO - you fill in here.
+void Advance(shared_ptr<ListNode<int>> &l, int i) {
+  while (i--)
+    l = l->next;
+}
+shared_ptr<ListNode<int>> HasCycle(const shared_ptr<ListNode<int>> &head, int &len, int &cycle) {
+  int i = 0;
+  cycle = 0;
+  auto fast = head, slow = head;
+  while (fast && fast->next) {
+    fast = fast->next->next;
+    if (slow != fast) {
+      ++i;
+      if (slow = slow->next; slow != fast)
+        continue;
+    }
+    do {
+      slow = slow->next;
+      ++cycle;
+    } while (slow != fast);
+    fast = head;
+    if (i < cycle) {
+      Advance(slow, cycle - i);
+      len = cycle;
+    } else {
+      Advance(fast, i - cycle);
+      len = i;
+    }
+    while ((fast = fast->next) != (slow = slow->next))
+      ++len;
+    return fast;
+  }
   return nullptr;
 }
-void OverlappingListsWrapper(TimedExecutor& executor,
+void Length(shared_ptr<ListNode<int>> &l, int &i) {
+  for (i = 0; l->next; ++i, l = l->next);
+}
+shared_ptr<ListNode<int>> OverlappingNoCycleLists(
+    shared_ptr<ListNode<int>> l0, shared_ptr<ListNode<int>> l1) {
+  if (!l0 || !l1)
+    return nullptr;
+  auto m0 = l0, m1 = l1;
+  int i, j;
+  Length(l0, i), Length(l1, j);
+  if (l0 != l1)
+    return nullptr;
+  i < j ? Advance(m1, j - i) : Advance(m0, i - j);
+  while ((m0 = m0->next) != (m1 = m1->next));
+  return m0;
+}
+shared_ptr<ListNode<int>> OverlappingLists(shared_ptr<ListNode<int>> l0,
+                                           shared_ptr<ListNode<int>> l1) {
+  int len0, cyc0, len1, cyc1;
+  auto c0 = HasCycle(l0, len0, cyc0), c1 = HasCycle(l1, len1, cyc1);
+  if (!cyc0 && !cyc1)
+    return OverlappingNoCycleLists(l0, l1);
+  if (cyc0 != cyc1)
+    return nullptr;
+  while (cyc1-- && c1 != c0)
+    c1 = c1->next;
+  if (c1 != c0)
+    return nullptr;
+  int diff = abs(len1 - len0);
+  Advance(len0 < len1 ? l1 : l0, diff);
+  while (diff-- && l1 != l0) {
+    l1 = l1->next;
+    l0 = l0->next;
+  }
+  return l1 == l0 ? l0 : c0;
+}
+void OverlappingListsWrapper(TimedExecutor &executor,
                              shared_ptr<ListNode<int>> l0,
                              shared_ptr<ListNode<int>> l1,
                              shared_ptr<ListNode<int>> common, int cycle0,
@@ -77,15 +140,15 @@ void OverlappingListsWrapper(TimedExecutor& executor,
   auto result = executor.Run([&] { return OverlappingLists(l0, l1); });
 
   if (!((common_nodes.empty() && result == nullptr) ||
-        common_nodes.count(result) > 0)) {
+      common_nodes.count(result) > 0)) {
     throw TestFailure("Invalid result");
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
-  std::vector<std::string> param_names{"executor", "l0",     "l1",
-                                       "common",   "cycle0", "cycle1"};
+  std::vector<std::string> param_names{"executor", "l0", "l1",
+                                       "common", "cycle0", "cycle1"};
   return GenericTestMain(args, "do_lists_overlap.cc", "do_lists_overlap.tsv",
                          &OverlappingListsWrapper, DefaultComparator{},
                          param_names);

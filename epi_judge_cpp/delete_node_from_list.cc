@@ -3,12 +3,12 @@
 #include "test_framework/timed_executor.h"
 
 // Assumes node_to_delete is not tail.
-void DeletionFromList(const shared_ptr<ListNode<int>>& node_to_delete) {
-  // TODO - you fill in here.
-  return;
+void DeletionFromList(const shared_ptr<ListNode<int>> &node_to_delete) {
+  node_to_delete->data = node_to_delete->next->data;
+  node_to_delete->next = node_to_delete->next->next;
 }
 shared_ptr<ListNode<int>> DeletionFromListWrapper(
-    TimedExecutor& executor, const shared_ptr<ListNode<int>>& head,
+    TimedExecutor &executor, const shared_ptr<ListNode<int>> &head,
     int node_to_delete_idx) {
   shared_ptr<ListNode<int>> selected_node = head;
   while (node_to_delete_idx-- > 0) {
@@ -21,7 +21,7 @@ shared_ptr<ListNode<int>> DeletionFromListWrapper(
   return head;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "head",
                                        "node_to_delete_idx"};

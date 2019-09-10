@@ -4,15 +4,16 @@
 using std::shared_ptr;
 
 shared_ptr<ListNode<int>> SearchList(shared_ptr<ListNode<int>> L, int key) {
-  // TODO - you fill in here.
-  return nullptr;
+  while (L && L->data != key)
+    L = L->next;
+  return L;
 }
 int SearchListWrapper(shared_ptr<ListNode<int>> L, int key) {
   auto result = SearchList(L, key);
   return result ? result->data : -1;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"L", "key"};
   return GenericTestMain(args, "search_in_list.cc", "search_in_list.tsv",

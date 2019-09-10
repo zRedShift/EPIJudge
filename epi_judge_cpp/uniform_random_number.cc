@@ -10,16 +10,22 @@ using std::random_device;
 using std::uniform_int_distribution;
 using std::vector;
 int ZeroOneRandom() {
-  default_random_engine gen((random_device())());
+  default_random_engine gen((random_device()) ());
   uniform_int_distribution<int> dis(0, 1);
   return dis(gen);
 }
 
 int UniformRandom(int lower_bound, int upper_bound) {
-  // TODO - you fill in here.
-  return 0;
+  const unsigned int range  = upper_bound - lower_bound, len = ilogb(range) + 1;
+  unsigned int random;
+  do {
+    random = 0;
+    for (auto i = 0; i < len; ++i)
+      random = (random << 1u) + ZeroOneRandom();
+  } while (random > range);
+  return lower_bound + random;
 }
-bool UniformRandomRunner(TimedExecutor& executor, int lower_bound,
+bool UniformRandomRunner(TimedExecutor &executor, int lower_bound,
                          int upper_bound) {
   vector<int> result;
   executor.Run([&] {
@@ -34,13 +40,13 @@ bool UniformRandomRunner(TimedExecutor& executor, int lower_bound,
                                         0.01);
 }
 
-void UniformRandomWrapper(TimedExecutor& executor, int lower_bound,
+void UniformRandomWrapper(TimedExecutor &executor, int lower_bound,
                           int upper_bound) {
   RunFuncWithRetries(
       bind(UniformRandomRunner, std::ref(executor), lower_bound, upper_bound));
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "lower_bound",
                                        "upper_bound"};

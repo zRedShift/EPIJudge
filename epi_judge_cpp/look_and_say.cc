@@ -3,11 +3,22 @@
 using std::string;
 
 string LookAndSay(int n) {
-  // TODO - you fill in here.
-  return "";
+  string s1, s2 = "1";
+  auto prev = &s1, next = &s2;
+  for (int i = 1; i < n; ++i) {
+    std::swap(prev, next);
+    next->resize(0);
+    int d;
+    for (auto curr = begin(*prev); curr != end(*prev); curr += d) {
+      d = distance(curr, find_if(curr + 1, end(*prev), [&curr](char c) { return *curr != c; }));
+      next->push_back(d + '0');
+      next->push_back(*curr);
+    }
+  }
+  return *next;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"n"};
   return GenericTestMain(args, "look_and_say.cc", "look_and_say.tsv",

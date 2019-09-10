@@ -3,8 +3,15 @@
 using std::string;
 
 string SnakeString(const string& s) {
-  // TODO - you fill in here.
-  return "";
+  string ans;
+  ans.reserve(s.size());
+  for (auto i = 1; i < s.size(); i += 4)
+    ans +=  s[i];
+  for (auto i = 0; i < s.size(); i += 2)
+    ans +=  s[i];
+  for (auto i = 3; i < s.size(); i += 4)
+    ans +=  s[i];
+  return ans;
 }
 
 int main(int argc, char* argv[]) {

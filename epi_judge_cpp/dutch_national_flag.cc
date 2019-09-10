@@ -4,13 +4,32 @@
 #include "test_framework/test_failure.h"
 #include "test_framework/timed_executor.h"
 using std::vector;
+using std::iter_swap;
 typedef enum { kRed, kWhite, kBlue } Color;
 
-void DutchFlagPartition(int pivot_index, vector<Color>* A_ptr) {
-  // TODO - you fill in here.
-  return;
+void DutchFlagPartition(int pivot_index, vector<Color> *A_ptr) {
+  auto &A = *A_ptr;
+  auto smaller = begin(A) - 1, pos = begin(A) + pivot_index + 1, larger = end(A);
+  auto pivot = A[pivot_index];
+  while (larger > pos) {
+    if (*pos < pivot)
+      iter_swap(pos, ++smaller);
+    else if (*pos > pivot)
+      iter_swap(pos, --larger);
+    else
+      ++pos;
+  }
+  pos = begin(A) + pivot_index - 1;
+  while (smaller < pos) {
+    if (*pos < pivot)
+      iter_swap(pos, ++smaller);
+    else if (*pos > pivot)
+      iter_swap(pos, --larger);
+    else
+      --pos;
+  }
 }
-void DutchFlagPartitionWrapper(TimedExecutor& executor, const vector<int>& A,
+void DutchFlagPartitionWrapper(TimedExecutor &executor, const vector<int> &A,
                                int pivot_idx) {
   vector<Color> colors;
   colors.resize(A.size());
@@ -41,13 +60,13 @@ void DutchFlagPartitionWrapper(TimedExecutor& executor, const vector<int>& A,
 
   if (i != colors.size()) {
     throw TestFailure("Not partitioned after " + std::to_string(i) +
-                      "th element");
+        "th element");
   } else if (count != std::array<int, 3>{0, 0, 0}) {
     throw TestFailure("Some elements are missing from original array");
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "A", "pivot_idx"};
   return GenericTestMain(args, "dutch_national_flag.cc",

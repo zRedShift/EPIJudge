@@ -1,12 +1,16 @@
 #include <vector>
 #include "test_framework/generic_test.h"
-using std::vector;
-double BuyAndSellStockOnce(const vector<double>& prices) {
-  // TODO - you fill in here.
-  return 0.0;
+
+double BuyAndSellStockOnce(const std::vector<double> &prices) {
+  double min = std::numeric_limits<double>::max(), max_diff{0.0};
+  for (const auto& price : prices) {
+    min = std::min(price, min);
+    max_diff = std::max(price - min, max_diff);
+  }
+  return max_diff;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"prices"};
   return GenericTestMain(args, "buy_and_sell_stock.cc",

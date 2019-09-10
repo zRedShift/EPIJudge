@@ -1,7 +1,8 @@
 #include "test_framework/generic_test.h"
 unsigned long long ClosestIntSameBitCount(unsigned long long x) {
-  // TODO - you fill in here.
-  return 0;
+  auto y = (x & 1u) ? ~x : x;
+  auto mask = y & ~(y-1);
+  return x ^ (mask | (mask >> 1u));
 }
 
 int main(int argc, char* argv[]) {

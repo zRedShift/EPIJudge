@@ -4,16 +4,28 @@
 #include "test_framework/test_failure.h"
 #include "test_framework/timed_executor.h"
 
-BinaryTreeNode<int>* LCA(const unique_ptr<BinaryTreeNode<int>>& node0,
-                         const unique_ptr<BinaryTreeNode<int>>& node1) {
-  // TODO - you fill in here.
-  return nullptr;
+BinaryTreeNode<int> *LCA(const unique_ptr<BinaryTreeNode<int>> &node0,
+                         const unique_ptr<BinaryTreeNode<int>> &node1) {
+  auto parent0 = node0->parent, parent1 = node1->parent;
+  int len = 0;
+  while (parent0)
+    --len, parent0 = parent0->parent;
+  while (parent1)
+    ++len, parent1 = parent1->parent;
+  parent0 = node0.get(), parent1 = node1.get();
+  if (len < 0)
+    std::swap(parent0, parent1), len = -len;
+  while (len--)
+    parent1 = parent1->parent;
+  while (parent0 != parent1)
+    parent0 = parent0->parent, parent1 = parent1->parent;
+  return parent0;
 }
-int LcaWrapper(TimedExecutor& executor,
-               const unique_ptr<BinaryTreeNode<int>>& tree, int key0,
+int LcaWrapper(TimedExecutor &executor,
+               const unique_ptr<BinaryTreeNode<int>> &tree, int key0,
                int key1) {
-  const unique_ptr<BinaryTreeNode<int>>& node0 = MustFindNode(tree, key0);
-  const unique_ptr<BinaryTreeNode<int>>& node1 = MustFindNode(tree, key1);
+  const unique_ptr<BinaryTreeNode<int>> &node0 = MustFindNode(tree, key0);
+  const unique_ptr<BinaryTreeNode<int>> &node1 = MustFindNode(tree, key1);
 
   auto result = executor.Run([&] { return LCA(node0, node1); });
 
@@ -23,7 +35,7 @@ int LcaWrapper(TimedExecutor& executor,
   return result->data;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "tree", "key0", "key1"};
   return GenericTestMain(args, "lowest_common_ancestor_with_parent.cc",

@@ -7,20 +7,23 @@
 using std::length_error;
 class Queue {
  public:
-  void Enqueue(int x) {
-    // TODO - you fill in here.
-    return;
-  }
+  void Enqueue(int x) { enqueue.push(x); }
   int Dequeue() {
-    // TODO - you fill in here.
-    return 0;
+    if (dequeue.empty())
+      while (!enqueue.empty())
+        dequeue.push(enqueue.top()), enqueue.pop();
+    int x = dequeue.top();
+    dequeue.pop();
+    return x;
   }
+ private:
+  std::stack<int> enqueue, dequeue;
 };
 struct QueueOp {
   enum { kConstruct, kDequeue, kEnqueue } op;
   int argument;
 
-  QueueOp(const std::string& op_string, int arg) : argument(arg) {
+  QueueOp(const std::string &op_string, int arg) : argument(arg) {
     if (op_string == "Queue") {
       op = kConstruct;
     } else if (op_string == "dequeue") {
@@ -33,36 +36,35 @@ struct QueueOp {
   }
 };
 
-template <>
+template<>
 struct SerializationTraits<QueueOp> : UserSerTraits<QueueOp, std::string, int> {
 };
 
-void QueueTester(const std::vector<QueueOp>& ops) {
+void QueueTester(const std::vector<QueueOp> &ops) {
   try {
     Queue q;
-    for (auto& x : ops) {
+    for (auto &x : ops) {
       switch (x.op) {
-        case QueueOp::kConstruct:
-          break;
+        case QueueOp::kConstruct:break;
         case QueueOp::kDequeue: {
           int result = q.Dequeue();
           if (result != x.argument) {
             throw TestFailure("Dequeue: expected " +
-                              std::to_string(x.argument) + ", got " +
-                              std::to_string(result));
+                std::to_string(x.argument) + ", got " +
+                std::to_string(result));
           }
-        } break;
-        case QueueOp::kEnqueue:
-          q.Enqueue(x.argument);
+        }
+          break;
+        case QueueOp::kEnqueue:q.Enqueue(x.argument);
           break;
       }
     }
-  } catch (length_error&) {
+  } catch (length_error &) {
     throw TestFailure("Unexpected length_error exception");
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"ops"};
   return GenericTestMain(args, "queue_from_stacks.cc", "queue_from_stacks.tsv",

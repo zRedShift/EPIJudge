@@ -3,25 +3,34 @@
 #include "test_framework/test_failure.h"
 class Queue {
  public:
-  Queue(size_t capacity) {}
+  explicit Queue(size_t capacity) : queue(capacity), front(), size() {}
   void Enqueue(int x) {
-    // TODO - you fill in here.
-    return;
+    if (size == queue.size()) {
+      auto iter = queue.begin() + front % queue.size();
+      std::vector<int> new_queue;
+      new_queue.reserve(2 * size);
+      new_queue.insert(new_queue.end(), iter, queue.end());
+      new_queue.insert(new_queue.end(), queue.begin(), iter);
+      new_queue.resize(2 * size);
+      queue.swap(new_queue);
+      front = 0;
+    }
+    queue[(front + size++) % queue.size()] = x;
   }
   int Dequeue() {
-    // TODO - you fill in here.
-    return 0;
+    --size;
+    return queue[front++ % queue.size()];
   }
-  int Size() const {
-    // TODO - you fill in here.
-    return 0;
-  }
+  [[nodiscard]] int Size() const { return size; }
+ private:
+  std::vector<int> queue;
+  size_t front, size;
 };
 struct QueueOp {
   enum { kConstruct, kDequeue, kEnqueue, kSize } op;
   int argument;
 
-  QueueOp(const std::string& op_string, int arg) : argument(arg) {
+  QueueOp(const std::string &op_string, int arg) : argument(arg) {
     if (op_string == "Queue") {
       op = kConstruct;
     } else if (op_string == "dequeue") {
@@ -35,46 +44,47 @@ struct QueueOp {
     }
   }
 
-  void execute(Queue& q) const {
+  void execute(Queue &q) const {
     switch (op) {
       case kConstruct:
         // Hack to bypass deleted assign operator
         q.~Queue();
-        new (&q) Queue(argument);
+        new(&q) Queue(argument);
         break;
       case kDequeue: {
         int result = q.Dequeue();
         if (result != argument) {
           throw TestFailure("Dequeue: expected " + std::to_string(argument) +
-                            ", got " + std::to_string(result));
+              ", got " + std::to_string(result));
         }
-      } break;
-      case kEnqueue:
-        q.Enqueue(argument);
+      }
+        break;
+      case kEnqueue:q.Enqueue(argument);
         break;
       case kSize: {
         int s = q.Size();
         if (s != argument) {
           throw TestFailure("Size: expected " + std::to_string(argument) +
-                            ", got " + std::to_string(s));
+              ", got " + std::to_string(s));
         }
-      } break;
+      }
+        break;
     }
   }
 };
 
-template <>
+template<>
 struct SerializationTraits<QueueOp> : UserSerTraits<QueueOp, std::string, int> {
 };
 
-void QueueTester(const std::vector<QueueOp>& ops) {
+void QueueTester(const std::vector<QueueOp> &ops) {
   Queue q(0);
-  for (auto& op : ops) {
+  for (auto &op : ops) {
     op.execute(q);
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"ops"};
   return GenericTestMain(args, "circular_queue.cc", "circular_queue.tsv",

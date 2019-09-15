@@ -4,12 +4,19 @@
 #include "test_framework/timed_executor.h"
 using std::vector;
 
-int SearchEntryEqualToItsIndex(const vector<int>& A) {
-  // TODO - you fill in here.
-  return 0;
+int SearchEntryEqualToItsIndex(const vector<int> &A) {
+  int left = 0, right = A.size() - 1;
+  while (left <= right)
+    if (int mid = left + (right - left) / 2; A[mid] == mid)
+      return mid;
+    else if (A[mid] < mid)
+      left = mid + 1;
+    else
+      right = mid - 1;
+  return -1;
 }
-void SearchEntryEqualToItsIndexWrapper(TimedExecutor& executor,
-                                       const vector<int>& A) {
+void SearchEntryEqualToItsIndexWrapper(TimedExecutor &executor,
+                                       const vector<int> &A) {
   int result = executor.Run([&] { return SearchEntryEqualToItsIndex(A); });
 
   if (result != -1) {
@@ -25,7 +32,7 @@ void SearchEntryEqualToItsIndexWrapper(TimedExecutor& executor,
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "A"};
   return GenericTestMain(

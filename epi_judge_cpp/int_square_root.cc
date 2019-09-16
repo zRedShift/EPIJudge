@@ -1,8 +1,16 @@
 #include "test_framework/generic_test.h"
 
 int SquareRoot(int k) {
-  // TODO - you fill in here.
-  return 0;
+  static const int max_sqrt = std::sqrt(std::numeric_limits<int>::max());
+  int left = 0, right = std::min((k + 1) / 2, max_sqrt);
+  while (left <= right) {
+    int mid = left + (right - left) / 2;
+    if (mid * mid > k)
+      right = mid - 1;
+    else
+      left = mid + 1;
+  }
+  return right;
 }
 
 int main(int argc, char* argv[]) {

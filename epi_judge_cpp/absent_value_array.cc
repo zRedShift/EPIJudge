@@ -7,11 +7,18 @@ using std::vector;
 
 int FindMissingElement(vector<int>::const_iterator stream_begin,
                        const vector<int>::const_iterator& stream_end) {
-  // TODO - you fill in here.
-  return 0;
+  std::bitset<1 << 16> present;
+  while (stream_begin != stream_end)
+    present.set(*stream_begin++);
+  int i = 0;
+  while (present.test(i))
+    ++i;
+  return i;
 }
 int FindMissingElementWrapper(const vector<int>& stream) {
   try {
+    vector<int> a = stream;
+    std::sort(a.begin(), a.end());
     return FindMissingElement(cbegin(stream), cend(stream));
   } catch (invalid_argument&) {
     throw TestFailure("Unexpected no_missing_element exception");

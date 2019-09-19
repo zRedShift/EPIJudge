@@ -1,3 +1,4 @@
+#include <list>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -9,13 +10,29 @@ using std::unordered_set;
 using std::vector;
 
 struct Subarray {
+  bool operator<(const Subarray &rhs) const {
+    return end - start < rhs.end - rhs.start;
+  }
   int start, end;
 };
 
 Subarray FindSmallestSubarrayCoveringSet(
     const vector<string> &paragraph, const unordered_set<string> &keywords) {
-  // TODO - you fill in here.
-  return {0, 0};
+  Subarray result{0, std::numeric_limits<int>::max()};
+  std::unordered_map<string, std::list<int>::iterator> last_appearance(keywords.size());
+  std::list<int> ordered_appearance;
+  for (int i = 0; i < paragraph.size(); ++i)
+    if (keywords.find(paragraph[i]) != keywords.end()) {
+      ordered_appearance.push_front(i);
+      auto prev = last_appearance.find(paragraph[i]);
+      if (prev == last_appearance.end())
+        last_appearance.emplace(paragraph[i], ordered_appearance.begin());
+      else
+        ordered_appearance.erase(prev->second), prev->second = ordered_appearance.begin();
+      if (ordered_appearance.size() == keywords.size())
+        result = std::min(result, Subarray{ordered_appearance.back(), ordered_appearance.front()});
+    }
+  return result;
 }
 int FindSmallestSubarrayCoveringSetWrapper(
     TimedExecutor &executor, const vector<string> &paragraph,

@@ -9,38 +9,32 @@ using std::vector;
 
 struct Subarray {
   // Represent subarray by starting and ending indices, inclusive.
-  bool operator<(const Subarray &rhs) const {
-    return end - start < rhs.end - rhs.start;
-  }
   int start, end;
 };
-
-Subarray FindSmallestSequentiallyCoveringSubset(
-    const vector<string> &paragraph, const vector<string> &keywords) {
-  std::unordered_map<string, int> keyword_to_position(keywords.size());
-  for (int i = 0; i < keywords.size(); ++i)
-    keyword_to_position[keywords[i]] = i;
-  vector<vector<int>> positions(keywords.size());
-  for (int i = 0; i < paragraph.size(); ++i)
-    if (auto pos = keyword_to_position.find(paragraph[i]); pos != keyword_to_position.end())
-      positions[pos->second].push_back(i);
-  vector<vector<int>::iterator> subset;
-  subset.reserve(keywords.size());
-  for (auto &pos: positions)
-    subset.emplace_back(pos.begin());
-  Subarray result{positions.front().front(), positions.back().back()};
-  while (subset.front() != positions.front().end()) {
-    for (int i = 1; i < keywords.size(); ++i) {
-      subset[i] = std::upper_bound(subset[i], positions[i].end(), *subset[i - 1]);
-      if (subset[i] == positions[i].end())
-        return result;
+Subarray FindSmallestSequentiallyCoveringSubset(const vector<string> &paragraph, const vector<string> &keywords) {
+  int dict_size = keywords.size();
+  std::unordered_map<string, int> key_to_i(dict_size);
+  for (int i = 0; i < dict_size; ++i)
+    key_to_i.emplace(keywords[i], i);
+  std::vector<int> last_position(dict_size + 1), smallest_subarray(dict_size + 1, -1);
+  smallest_subarray[0] = 0;
+  Subarray result{0, std::numeric_limits<int>::max()};
+  int subarray_size = std::numeric_limits<int>::max(), subarray_end = -1;
+  for (int &i = last_position[0]; i < paragraph.size(); ++i) {
+    auto found = key_to_i.find(paragraph[i]);
+    if (found == key_to_i.end())
+      continue;
+    int key = found->second + 1;
+    last_position[key] = i;
+    if (smallest_subarray[key - 1] != -1) {
+      smallest_subarray[key] = smallest_subarray[key - 1] + i - last_position[key - 1];
+      if (key == dict_size && smallest_subarray.back() < subarray_size)
+        subarray_size = smallest_subarray.back(), subarray_end = i;
     }
-    for (int i = keywords.size() - 2; i >= 0; --i)
-      subset[i] = std::upper_bound(subset[i], positions[i].end(), *subset[i + 1]) - 1;
-    result = std::min(result, {*subset.front()++, *subset.back()});
   }
-  return result;
+  return {subarray_end - subarray_size, subarray_end};
 }
+
 int FindSmallestSequentiallyCoveringSubsetWrapper(
     TimedExecutor &executor, const vector<string> &paragraph,
     const vector<string> &keywords) {

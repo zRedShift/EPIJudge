@@ -2,17 +2,20 @@
 #include "test_framework/generic_test.h"
 using std::vector;
 
-void MergeTwoSortedArrays(vector<int>& A, int m, const vector<int>& B, int n) {
-  // TODO - you fill in here.
-  return;
+void MergeTwoSortedArrays(vector<int> &A, int m, const vector<int> &B, int n) {
+  int i = m-- + --n;
+  while (m >= 0 && n >= 0)
+    A[i--] = A[m] > B[n] ? A[m--] : B[n--];
+  while (n >= 0)
+    A[i--] = B[n--];
 }
 vector<int> MergeTwoSortedArraysWrapper(vector<int> A, int m,
-                                        const vector<int>& B, int n) {
+                                        const vector<int> &B, int n) {
   MergeTwoSortedArrays(A, m, B, n);
   return A;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"A", "m", "B", "n"};
   return GenericTestMain(

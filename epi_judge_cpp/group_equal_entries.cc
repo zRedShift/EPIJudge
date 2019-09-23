@@ -1,4 +1,3 @@
-#include <iterator>
 #include <set>
 #include <string>
 #include <vector>
@@ -14,8 +13,22 @@ struct Person {
   string name;
 };
 
-void GroupByAge(vector<Person>* people) {
-  // TODO - you fill in here.
+void GroupByAge(vector<Person> *people_ptr) {
+  auto &people = *people_ptr;
+  std::unordered_map<int, int> ages{};
+  for (const auto &person: people)
+    ++ages[person.age];
+  int sum = 0;
+  for (auto &age: ages)
+    sum += age.second, age.second = sum - age.second;
+  for (auto &person: people) {
+    while (person.age >= 0) {
+      int &pos = ages[person.age];
+      person.age = -person.age;
+      std::swap(person, people[pos++]);
+    }
+    person.age = -person.age;
+  }
   return;
 }
 template <>

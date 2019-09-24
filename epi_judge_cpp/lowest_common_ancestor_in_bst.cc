@@ -8,16 +8,19 @@ using std::unique_ptr;
 
 // Input nodes are nonempty and the key at s is less than or equal to that at
 // b.
-BstNode<int>* FindLCA(const unique_ptr<BstNode<int>>& tree,
-                      const unique_ptr<BstNode<int>>& s,
-                      const unique_ptr<BstNode<int>>& b) {
-  // TODO - you fill in here.
-  return nullptr;
+BstNode<int> *FindLCA(const unique_ptr<BstNode<int>> &tree,
+                      const unique_ptr<BstNode<int>> &s,
+                      const unique_ptr<BstNode<int>> &b) {
+  if (tree->data < s->data)
+    return FindLCA(tree->right, s, b);
+  if (tree->data > b->data)
+    return FindLCA(tree->left, s, b);
+  return tree.get();
 }
-int LcaWrapper(TimedExecutor& executor,
-               const std::unique_ptr<BstNode<int>>& tree, int key0, int key1) {
-  const unique_ptr<BstNode<int>>& node0 = MustFindNode(tree, key0);
-  const unique_ptr<BstNode<int>>& node1 = MustFindNode(tree, key1);
+int LcaWrapper(TimedExecutor &executor,
+               const std::unique_ptr<BstNode<int>> &tree, int key0, int key1) {
+  const unique_ptr<BstNode<int>> &node0 = MustFindNode(tree, key0);
+  const unique_ptr<BstNode<int>> &node1 = MustFindNode(tree, key1);
 
   auto result = executor.Run([&] { return FindLCA(tree, node0, node1); });
 
@@ -27,7 +30,7 @@ int LcaWrapper(TimedExecutor& executor,
   return result->data;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "tree", "key0", "key1"};
   return GenericTestMain(args, "lowest_common_ancestor_in_bst.cc",

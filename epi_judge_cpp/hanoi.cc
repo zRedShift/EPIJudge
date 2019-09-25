@@ -9,11 +9,21 @@ using std::array;
 using std::stack;
 using std::vector;
 const int kNumPegs = 3;
-vector<vector<int>> ComputeTowerHanoi(int num_rings) {
-  // TODO - you fill in here.
-  return {};
+void MoveRings(int num_rings, int from, int to, int spare, vector<vector<int>>::iterator &moves) {
+  if (!num_rings)
+    return;
+  MoveRings(num_rings - 1, from, spare, to, moves);
+  moves->front() = from, moves++->back() = to;
+  MoveRings(num_rings - 1, spare, to, from, moves);
 }
-void ComputeTowerHanoiWrapper(TimedExecutor& executor, int num_rings) {
+
+vector<vector<int>> ComputeTowerHanoi(int num_rings) {
+  vector<vector<int>> moves((1 << num_rings) - 1, vector<int>(2));
+  auto iter = moves.begin();
+  MoveRings(num_rings, 0, 1, 2, iter);
+  return moves;
+}
+void ComputeTowerHanoiWrapper(TimedExecutor &executor, int num_rings) {
   array<stack<int>, kNumPegs> pegs;
   for (int i = num_rings; i >= 1; --i) {
     pegs[0].push(i);
@@ -22,12 +32,12 @@ void ComputeTowerHanoiWrapper(TimedExecutor& executor, int num_rings) {
   vector<vector<int>> result =
       executor.Run([&] { return ComputeTowerHanoi(num_rings); });
 
-  for (const vector<int>& operation : result) {
+  for (const vector<int> &operation : result) {
     int from_peg = operation[0], to_peg = operation[1];
     if (!pegs[to_peg].empty() && pegs[from_peg].top() >= pegs[to_peg].top()) {
       throw TestFailure("Illegal move from " +
-                        std::to_string(pegs[from_peg].top()) + " to " +
-                        std::to_string(pegs[to_peg].top()));
+          std::to_string(pegs[from_peg].top()) + " to " +
+          std::to_string(pegs[to_peg].top()));
     }
     pegs[to_peg].push(pegs[from_peg].top());
     pegs[from_peg].pop();
@@ -44,7 +54,7 @@ void ComputeTowerHanoiWrapper(TimedExecutor& executor, int num_rings) {
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "num_rings"};
   return GenericTestMain(args, "hanoi.cc", "hanoi.tsv",

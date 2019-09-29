@@ -7,22 +7,30 @@
 using std::vector;
 
 vector<int> GrayCode(int num_bits) {
-  // TODO - you fill in here.
-  return {};
+  unsigned size = 1u << num_bits;
+  vector<int> result(size);
+  for (unsigned bit = 1; bit != size; bit <<= 1u) {
+    auto output = result.begin() + bit;
+    std::transform(vector<int>::const_reverse_iterator(output),
+                   result.crend(),
+                   result.begin() + bit,
+                   [bit](const unsigned &x) { return x | bit; });
+  }
+  return result;
 }
 bool DiffersByOneBit(int x, int y) {
-  int bit_difference = x ^ y;
+  int bit_difference = x ^y;
   return bit_difference && !(bit_difference & (bit_difference - 1));
 }
 
-void GrayCodeWrapper(TimedExecutor& executor, int num_bits) {
+void GrayCodeWrapper(TimedExecutor &executor, int num_bits) {
   vector<int> result = executor.Run([&] { return GrayCode(num_bits); });
 
   int expected_size = (1 << num_bits);
   if (result.size() != expected_size) {
     throw TestFailure("Length mismatch: expected " +
-                      std::to_string(expected_size) + ", got " +
-                      std::to_string(result.size()));
+        std::to_string(expected_size) + ", got " +
+        std::to_string(result.size()));
   }
   for (size_t i = 1; i < result.size(); i++)
     if (!DiffersByOneBit(result[i - 1], result[i])) {
@@ -37,12 +45,12 @@ void GrayCodeWrapper(TimedExecutor& executor, int num_bits) {
   auto uniq = std::unique(begin(result), end(result));
   if (uniq != end(result)) {
     throw TestFailure("Not all entries are distinct: found " +
-                      std::to_string(std::distance(uniq, end(result))) +
-                      " duplicates");
+        std::to_string(std::distance(uniq, end(result))) +
+        " duplicates");
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "num_bits"};
   return GenericTestMain(args, "gray_code.cc", "gray_code.tsv",

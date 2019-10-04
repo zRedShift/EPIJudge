@@ -8,14 +8,36 @@ using std::string;
 using std::unordered_set;
 using std::vector;
 
-vector<string> DecomposeIntoDictionaryWords(
-    const string& domain, const unordered_set<string>& dictionary) {
-  // TODO - you fill in here.
+vector<string> DecomposeIntoDictionaryWords(const string &domain, const unordered_set<string> &dictionary) {
+  if (dictionary.empty())
+    return {};
+  vector<size_t> last(domain.size() + 1);
+  size_t max_word = std::max_element(dictionary.begin(), dictionary.end(), [](const string &a, const string &b) {
+    return a.size() < b.size();
+  })->size(), pos = 0, len = 0, result_size = 0, max_len = std::min(max_word, domain.size());
+  string temp;
+  temp.reserve(max_word);
+  do {
+    while (++len <= max_len)
+      if (!last[pos + len] && dictionary.count(temp.assign(domain, pos, len))) {
+        pos += len, last[pos] = len, result_size += 1, len = 0, max_len = std::min(max_word, domain.size() - pos);
+        if (pos == domain.size()) {
+          vector<string> result(result_size);
+          do {
+            len = last[pos], pos -= len;
+            result[--result_size] = domain.substr(pos, len);
+          } while (result_size);
+          return result;
+        }
+      }
+    len = last[pos], pos -= len, result_size -= 1, max_len = std::min(max_word, domain.size() - pos);
+  } while (result_size != -1);
   return {};
 }
+
 void DecomposeIntoDictionaryWordsWrapper(
-    TimedExecutor& executor, const string& domain,
-    const unordered_set<string>& dictionary, bool decomposable) {
+    TimedExecutor &executor, const string &domain,
+    const unordered_set<string> &dictionary, bool decomposable) {
   vector<string> result = executor.Run(
       [&] { return DecomposeIntoDictionaryWords(domain, dictionary); });
   if (!decomposable) {
@@ -26,7 +48,7 @@ void DecomposeIntoDictionaryWordsWrapper(
   }
 
   if (std::any_of(std::begin(result), std::end(result),
-                  [&](const std::string& s) { return !dictionary.count(s); })) {
+                  [&](const std::string &s) { return !dictionary.count(s); })) {
     throw TestFailure("Result uses words not in dictionary");
   }
 
@@ -36,7 +58,7 @@ void DecomposeIntoDictionaryWordsWrapper(
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "domain", "dictionary",
                                        "decomposable"};

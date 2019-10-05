@@ -5,11 +5,19 @@ using std::vector;
 int MaximumRevenue(const vector<int> &coins) {
   if (coins.size() <= 1)
     return coins.empty() ? 0 : coins.front();
-  vector<int> loss(coins.size());
-  for (int k = 1; k < coins.size() - 1; ++k)
+  vector<std::pair<int, int>> tally(coins.size() - 1);
+  std::transform(std::next(coins.cbegin()),
+                 coins.cend(),
+                 coins.cbegin(),
+                 tally.begin(),
+                 [](const int &x, const int &y) { return std::minmax(x, y); });
+  for (int k = 2; k < coins.size(); ++k)
     for (int i = 0, j = k; j < coins.size(); ++i, ++j)
-      loss[i] = std::min(coins[i] + loss[i + 1], coins[j] + loss[i]);
-  return std::max(coins.front() + loss[1], coins.back() + loss.front());
+      if (int left = coins[i] + tally[i + 1].first, right = coins[j] + tally[i].first; left < right)
+        tally[i].first = tally[i].second, tally[i].second = right;
+      else
+        tally[i].first = tally[i + 1].second, tally[i].second = left;
+  return tally.front().second;
 }
 
 int main(int argc, char *argv[]) {

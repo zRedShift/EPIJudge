@@ -11,27 +11,43 @@ using std::vector;
 
 struct GraphVertex {
   int label;
-  vector<GraphVertex*> edges;
+  vector<GraphVertex *> edges;
 };
 
-GraphVertex* CloneGraph(GraphVertex* graph) {
-  // TODO - you fill in here.
-  return new GraphVertex{0};
+GraphVertex *CloneGraph(GraphVertex *graph) {
+  if (!graph)
+    return nullptr;
+  std::queue<GraphVertex *> q;
+  q.emplace(graph);
+  auto new_graph = new GraphVertex{graph->label};
+  new_graph->edges.reserve(graph->edges.size());
+  std::unordered_map<GraphVertex *, GraphVertex *> vertex_map{{graph, new_graph}};
+  do {
+    auto &edges = vertex_map[q.front()]->edges;
+    for (const auto edge: q.front()->edges) {
+      auto &vertex = vertex_map[edge];
+      if (!vertex)
+        vertex = new GraphVertex{edge->label}, vertex->edges.reserve(edge->edges.size()), q.emplace(edge);
+      edges.emplace_back(vertex);
+    }
+    q.pop();
+  } while (!q.empty());
+  return new_graph;
 }
-vector<int> CopyLabels(const vector<GraphVertex*>& edges) {
+vector<int> CopyLabels(const vector<GraphVertex *> &edges) {
   vector<int> labels;
   transform(begin(edges), end(edges), back_inserter(labels),
-            [](const auto& e) { return e->label; });
+            [](const auto &e) { return e->label; });
   return labels;
 }
 
-void CheckGraph(GraphVertex* node, const vector<GraphVertex>& graph) {
+void CheckGraph(GraphVertex *node, const vector<GraphVertex> &graph) {
   if (!node || node == &graph[0]) {
     throw TestFailure("Graph was not copied");
   }
 
-  unordered_set<GraphVertex*> vertex_set;
-  queue<GraphVertex*> q;
+  unordered_set<GraphVertex *> vertex_set;
+  queue<GraphVertex *> q;
   q.emplace(node);
   vertex_set.emplace(node);
   while (!q.empty()) {
@@ -41,20 +57,20 @@ void CheckGraph(GraphVertex* node, const vector<GraphVertex>& graph) {
       throw TestFailure("Invalid vertex label");
     }
     vector<int> label1 = CopyLabels(vertex->edges),
-                label2 = CopyLabels(graph[vertex->label].edges);
+        label2 = CopyLabels(graph[vertex->label].edges);
     sort(begin(label1), end(label1));
     sort(begin(label2), end(label2));
     if (label1 != label2) {
       throw TestFailure("Edges mismatch");
     }
-    for (GraphVertex* e : vertex->edges) {
+    for (GraphVertex *e : vertex->edges) {
       if (!vertex_set.count(e)) {
         vertex_set.emplace(e);
         q.emplace(e);
       }
     }
   }
-  for (auto& v : vertex_set) {
+  for (auto &v : vertex_set) {
     delete v;
   }
 }
@@ -64,10 +80,10 @@ struct Edge {
   int to;
 };
 
-template <>
+template<>
 struct SerializationTraits<Edge> : UserSerTraits<Edge, int, int> {};
 
-void CloneGraphTest(int k, const vector<Edge>& edges) {
+void CloneGraphTest(int k, const vector<Edge> &edges) {
   vector<GraphVertex> graph;
   if (k <= 0) {
     throw std::runtime_error("Invalid k value");
@@ -78,17 +94,17 @@ void CloneGraphTest(int k, const vector<Edge>& edges) {
     graph.push_back(GraphVertex{i});
   }
 
-  for (const Edge& e : edges) {
+  for (const Edge &e : edges) {
     if (e.from < 0 || e.from >= k || e.to < 0 || e.to >= k) {
       throw std::runtime_error("Invalid vertex index");
     }
     graph[e.from].edges.push_back(&graph[e.to]);
   }
-  GraphVertex* result = CloneGraph(&graph[0]);
+  GraphVertex *result = CloneGraph(&graph[0]);
   CheckGraph(result, graph);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"k", "edges"};
   return GenericTestMain(args, "graph_clone.cc", "graph_clone.tsv",

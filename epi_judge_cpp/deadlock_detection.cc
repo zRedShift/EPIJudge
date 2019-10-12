@@ -5,24 +5,31 @@
 #include "test_framework/timed_executor.h"
 using std::vector;
 
+enum Color { kWhite, kGray, kBlack };
 struct GraphVertex {
-  vector<GraphVertex*> edges;
+  vector<GraphVertex *> edges;
+  Color color;
 };
-
-bool IsDeadlocked(vector<GraphVertex>* graph) {
-  // TODO - you fill in here.
-  return true;
+bool IsDeadLockedHelper(GraphVertex &vertex) {
+  if (vertex.color == kWhite) {
+    vertex.color = kGray;
+    if (std::none_of(vertex.edges.begin(), vertex.edges.end(), [](auto &edge) { return IsDeadLockedHelper(*edge); }))
+      vertex.color = kBlack;
+  }
+  return vertex.color == kGray;
 }
+bool IsDeadlocked(vector<GraphVertex> *graph) { return std::any_of(graph->begin(), graph->end(), IsDeadLockedHelper); }
+
 struct Edge {
   int from;
   int to;
 };
 
-template <>
+template<>
 struct SerializationTraits<Edge> : UserSerTraits<Edge, int, int> {};
 
-bool HasCycleWrapper(TimedExecutor& executor, int num_nodes,
-                     const vector<Edge>& edges) {
+bool HasCycleWrapper(TimedExecutor &executor, int num_nodes,
+                     const vector<Edge> &edges) {
   vector<GraphVertex> graph;
   if (num_nodes <= 0) {
     throw std::runtime_error("Invalid num_nodes value");
@@ -33,7 +40,7 @@ bool HasCycleWrapper(TimedExecutor& executor, int num_nodes,
     graph.push_back(GraphVertex{});
   }
 
-  for (const Edge& e : edges) {
+  for (const Edge &e : edges) {
     if (e.from < 0 || e.from >= num_nodes || e.to < 0 || e.to >= num_nodes) {
       throw std::runtime_error("Invalid vertex index");
     }
@@ -43,7 +50,7 @@ bool HasCycleWrapper(TimedExecutor& executor, int num_nodes,
   return executor.Run([&] { return IsDeadlocked(&graph); });
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "num_nodes", "edges"};
   return GenericTestMain(args, "deadlock_detection.cc",

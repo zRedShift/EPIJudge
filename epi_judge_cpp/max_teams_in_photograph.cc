@@ -6,32 +6,40 @@
 using std::vector;
 
 struct GraphVertex {
-  vector<GraphVertex*> edges;
+  vector<GraphVertex *> edges;
   // Set max_distance = 0 to indicate unvisited vertex.
   int max_distance = 0;
 };
+int Accumulator(const int &, GraphVertex *);
 
-int FindLargestNumberTeams(vector<GraphVertex>* graph) {
-  // TODO - you fill in here.
-  return 0;
+int MaxLength(GraphVertex *v) {
+  return v->max_distance = 1 + std::accumulate(v->edges.begin(), v->edges.end(), 0, Accumulator);
+}
+
+int Accumulator(const int &max, GraphVertex *v) {
+  return std::max(max, v->max_distance ? v->max_distance : MaxLength(v));
+}
+
+int FindLargestNumberTeams(vector<GraphVertex> *graph) {
+  return std::accumulate(graph->begin(), graph->end(), 0, [](const auto &m, auto &v) { return Accumulator(m, &v); });
 }
 struct Edge {
   int from;
   int to;
 };
 
-template <>
+template<>
 struct SerializationTraits<Edge> : UserSerTraits<Edge, int, int> {};
 
-int FindLargestNumberTeamsWrapper(TimedExecutor& executor, int k,
-                                  const vector<Edge>& edges) {
+int FindLargestNumberTeamsWrapper(TimedExecutor &executor, int k,
+                                  const vector<Edge> &edges) {
   if (k <= 0) {
     throw std::runtime_error("Invalid k value");
   }
 
   vector<GraphVertex> graph(k, GraphVertex{});
 
-  for (const Edge& e : edges) {
+  for (const Edge &e : edges) {
     if (e.from < 0 || e.from >= k || e.to < 0 || e.to >= k) {
       throw std::runtime_error("Invalid vertex index");
     }
@@ -41,7 +49,7 @@ int FindLargestNumberTeamsWrapper(TimedExecutor& executor, int k,
   return executor.Run([&] { return FindLargestNumberTeams(&graph); });
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "k", "edges"};
   return GenericTestMain(

@@ -12,6 +12,9 @@ struct Path {
   bool operator<(const Path &rhs) const {
     return distance < rhs.distance || (distance == rhs.distance && length < rhs.length);
   }
+  bool operator==(const Path &rhs) const {
+    return distance == rhs.distance && length == rhs.length;
+  }
 };
 struct GraphVertex {
   vector<std::pair<GraphVertex *, int>> edges;
@@ -19,17 +22,16 @@ struct GraphVertex {
   GraphVertex *pred = nullptr;
 };
 struct VertexComp {
-  bool operator()(const GraphVertex *lhs, const GraphVertex *rhs) const {
-    return lhs->path < rhs->path;
+  bool operator()(const GraphVertex *const &lhs, const GraphVertex *const &rhs) const {
+    return lhs->path < rhs->path || (lhs->path == rhs->path && lhs < rhs);
   }
 };
 
-vector<GraphVertex *> ShortestPathFewestEdges(const GraphVertex *origin, const GraphVertex *destination) {
-  auto curr(const_cast<GraphVertex *>(origin));
-  curr->path = {0, 0};
-  std::set<GraphVertex *, VertexComp> q{curr};
+vector<GraphVertex *> ShortestPathFewestEdges(GraphVertex *const origin, GraphVertex *const destination) {
+  origin->path = {0, 0};
+  std::set<GraphVertex *, VertexComp> q{origin};
   do {
-    curr = *q.cbegin();
+    auto curr = *q.cbegin();
     if (curr == destination)
       break;
     q.erase(q.cbegin());
@@ -37,7 +39,7 @@ vector<GraphVertex *> ShortestPathFewestEdges(const GraphVertex *origin, const G
       if (Path alt{curr->path.distance + distance, curr->path.length + 1}; alt < vertex->path)
         q.erase(vertex), vertex->path = alt, vertex->pred = curr, q.insert(vertex);
   } while (!q.empty());
-  curr = const_cast<GraphVertex *>(destination);
+  auto curr = destination;
   vector<GraphVertex *> result(curr->pred ? curr->path.length + 1 : 0);
   for (auto p = result.rbegin(); p != result.rend(); ++p)
     *p = curr, curr = curr->pred;

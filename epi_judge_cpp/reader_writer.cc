@@ -1,4 +1,3 @@
-#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
@@ -17,15 +16,15 @@ using std::chrono::milliseconds;
 using std::thread;
 using std::this_thread::sleep_for;
 using std::mutex;
-using std::atomic;
 using std::scoped_lock;
 using std::unique_lock;
 using std::condition_variable;
 
 namespace RW {
 int data = 0;
+mutex LRm;
 condition_variable LR;
-atomic<int> read_count = 0;
+int read_count = 0;
 mutex LW;
 }
 
@@ -38,13 +37,16 @@ void DoSomethingElse() {
 void Reader(string name) {
   while (true) {
     {
-      scoped_lock lock(RW::LW);
+      scoped_lock lock(RW::LRm, RW::LW);
       ++RW::read_count;
     }
     cout << "Reader " << name << " is about to read" << endl;
     cout << RW::data << endl;
-    if (!--RW::read_count)
-      RW::LR.notify_one();
+    {
+      scoped_lock lock(RW::LRm);
+      if (!--RW::read_count)
+        RW::LR.notify_one();
+    }
     DoSomethingElse();
   }
 }
@@ -52,8 +54,9 @@ void Reader(string name) {
 void Writer(string name) {
   while (true) {
     {
-      unique_lock lock(RW::LW);
-      RW::LR.wait(lock, [&] { return RW::read_count.load() == 0; });
+      scoped_lock lock_w(RW::LW);
+      unique_lock lock(RW::LRm);
+      RW::LR.wait(lock, [&] { return RW::read_count == 0; });
       cout << "Writer " << name << " is about to write" << endl;
       ++RW::data;
     }

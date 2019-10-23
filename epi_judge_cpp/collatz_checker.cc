@@ -1,30 +1,24 @@
 #include <vector>
 #include "test_framework/generic_test.h"
+using std::unordered_set;
 using std::vector;
 
 bool TestCollatzConjecture(int n) {
-  if (n < 2)
-    return true;
-  static vector<bool> tested(std::numeric_limits<unsigned>::max(), false);
-  vector<unsigned> temp;
-  tested[1] = true;
-  for (unsigned i = 2; i <= n; ++i) {
-    if (tested[i])
-      continue;
-    if (i % 2 == 0)
-      tested[i] = tested[i / 2];
-    else {
-      unsigned k = 3 * i + 1;
-      while (!tested[k])
-        temp.push_back(k), k = k % 2 ? 3 * k + 1 : k / 2;
-      for (const auto t : temp)
-        tested[t] = true;
-      temp.resize(0);
-    }
-    for (unsigned long j = i; j < std::numeric_limits<unsigned>::max(); j <<= 1)
-      tested[j] = true;
+  unordered_set<size_t> set{1}, temp;
+  for (size_t i = 3; i <= n; i += 2) {
+    size_t k = i;
+    do {
+      if (!set.emplace(k).second)
+        break;
+      if (!temp.emplace(k).second)
+        return false;
+      k = (3 * k + 1) / 2;
+      while (k % 2 == 0)
+        k /= 2;
+    } while (k >= i);
+    temp.clear();
   }
-  return std::all_of(tested.begin() + 1, tested.begin() + n + 1, [](bool v) { return v; });
+  return true;
 }
 
 int main(int argc, char *argv[]) {

@@ -4,8 +4,8 @@ using std::unordered_set;
 using std::vector;
 
 bool TestCollatzConjecture(int n) {
-  unordered_set<size_t> set{1}, temp;
-  for (size_t i = 3; i <= n; i += 2) {
+  unordered_set<size_t> set, temp;
+  for (size_t i = 1; i <= n; i += 2) {
     size_t k = i;
     do {
       if (!set.emplace(k).second)

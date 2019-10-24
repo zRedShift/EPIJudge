@@ -4,17 +4,16 @@ using std::unordered_set;
 using std::vector;
 
 bool TestCollatzConjecture(int n) {
-  unordered_set<size_t> set, temp;
-  for (size_t i = 1; i <= n; i += 2) {
+  unordered_set<size_t> temp;
+  for (size_t i = 3; i <= n; i += 2) {
     size_t k = i;
     do {
-      if (!set.emplace(k).second)
-        break;
       if (!temp.emplace(k).second)
         return false;
-      k = (3 * k + 1) / 2;
-      while (k % 2 == 0)
-        k /= 2;
+      k = 3 * k + 1;
+      do
+        k >>= 1u;
+      while ((k & 1u) == 0);
     } while (k >= i);
     temp.clear();
   }

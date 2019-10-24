@@ -7,7 +7,7 @@ if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -wd4018 -wd4244 -wd4800 -wd4805)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-unused-variable -O3 -Wno-sign-compare")
-    link_libraries(pthread boost_thread boost_system)
+    link_libraries(pthread boost_thread boost_system tbb)
 endif()
 
 add_executable(a_b_sqrt2 a_b_sqrt2.cc)

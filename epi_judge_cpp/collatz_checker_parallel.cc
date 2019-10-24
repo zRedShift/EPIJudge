@@ -1,23 +1,16 @@
-#include <vector>
 #include "test_framework/generic_test.h"
-using std::unordered_set;
-using std::vector;
-using std::thread;
-using std::future;
-using std::packaged_task;
 
 bool TestCollatzConjecture(int start, int finish) {
-  unordered_set<size_t> set, temp;
+  std::unordered_set<size_t> temp;
   for (size_t i = start; i <= finish; i += 2) {
     size_t k = i;
     do {
-      if (!set.emplace(k).second)
-        break;
       if (!temp.emplace(k).second)
         return false;
-      k = (3 * k + 1) / 2;
-      while (k % 2 == 0)
-        k /= 2;
+      k = 3 * k + 1;
+      do
+        k >>= 1u;
+      while ((k & 1u) == 0);
     } while (k >= i);
     temp.clear();
   }
@@ -25,15 +18,14 @@ bool TestCollatzConjecture(int start, int finish) {
 }
 
 bool TestCollatzConjectureWrapper(int n) {
-  static unsigned int num_threads = std::max(thread::hardware_concurrency(), 2u);
-  unsigned int finish = n % (num_threads - 1), adder = n > num_threads ? n / (num_threads - 1) : 0;
-  vector<future<bool>> futures;
+  static const int num_threads = std::max(std::thread::hardware_concurrency(), 2u);
+  const int adder = (n - 3) / num_threads;
+  if (adder < num_threads)
+    return TestCollatzConjecture(3, n);
+  std::vector<std::future<bool>> futures;
   futures.reserve(num_threads);
-  for (unsigned int start = 1; start < n; start = finish, finish += adder) {
-    packaged_task<decltype(TestCollatzConjecture)> task{TestCollatzConjecture};
-    futures.emplace_back(task.get_future());
-    thread(std::move(task), start, finish).detach();
-  }
+  for (int start = 3, finish = start + adder + (n - 3) % num_threads; start < n; start = finish, finish += adder)
+    futures.emplace_back(std::async(std::launch::async, TestCollatzConjecture, start, finish));
   return std::all_of(futures.begin(), futures.end(), [](auto &f) { return f.get(); });
 }
 

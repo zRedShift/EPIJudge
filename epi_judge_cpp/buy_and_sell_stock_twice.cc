@@ -19,14 +19,14 @@ double BuyAndSellStockTwiceAlternative(const vector<double> &prices) {
 }
 
 double BuyAndSellStockTwice(const vector<double> &prices) {
-  std::pair<double, double> min{std::numeric_limits<double>::max(), std::numeric_limits<double>::max()}, best{0.0, 0.0};
+  double min = std::numeric_limits<double>::max(), best_single = 0.0, max_leftover = -min, best = 0.0;
   for (const auto price : prices) {
-    best.first = std::max(best.first, price - min.first);
-    best.second = std::max(best.second, price - min.second);
-    min.first = std::min(min.first, price);
-    min.second = std::min(min.second, price - best.first);
+    min = std::min(min, price);
+    best_single = std::max(best_single, price - min);
+    max_leftover = std::max(max_leftover, best_single - price);
+    best = std::max(best, price + max_leftover);
   }
-  return best.second;
+  return best;
 }
 
 int main(int argc, char *argv[]) {

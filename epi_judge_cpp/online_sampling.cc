@@ -10,19 +10,20 @@ using std::bind;
 using std::vector;
 using std::default_random_engine;
 using std::uniform_int_distribution;
-using std::uniform_real_distribution;
-using std::swap;
 using std::random_device;
-using std::random_shuffle;
 
 // Assumption: there are at least k elements in the stream.
 vector<int> OnlineRandomSample(vector<int>::const_iterator stream_begin,
                                const vector<int>::const_iterator stream_end,
                                const int k) {
   default_random_engine re((random_device()) ());
-  vector<int> result(stream_begin, stream_end);
-  shuffle(result.begin(), result.end(), re);
-  return {result.begin(), result.begin() + k};
+  vector<int> result(stream_begin, stream_begin + k);
+  stream_begin += k - 1;
+  int n = k;
+  while (++stream_begin != stream_end)
+    if (int rand = uniform_int_distribution{0, n++}(re); rand < k)
+      result[rand] = *stream_begin;
+  return result;
 }
 bool OnlineRandomSamplingRunner(TimedExecutor &executor, vector<int> stream,
                                 int k) {

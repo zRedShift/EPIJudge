@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <functional>
+#include <random>
 #include <unordered_map>
 #include <vector>
 #include "test_framework/generic_test.h"
@@ -8,15 +9,23 @@
 using std::abs;
 using std::bind;
 using std::unordered_map;
+using std::default_random_engine;
+using std::random_device;
+using std::numeric_limits;
+using std::generate_canonical;
 using std::vector;
-int NonuniformRandomNumberGeneration(const vector<int>& values,
-                                     const vector<double>& probabilities) {
-  // TODO - you fill in here.
-  return 0;
+int NonuniformRandomNumberGeneration(const vector<int> &values,
+                                     const vector<double> &probabilities) {
+  default_random_engine re((random_device()) ());
+  double sum = probabilities.front(), roll = generate_canonical<double, numeric_limits<double>::digits>(re);
+  int i = 0;
+  while (sum < roll)
+    sum += probabilities[++i];
+  return values[i];
 }
 bool NonuniformRandomNumberGenerationRunner(
-    TimedExecutor& executor, const vector<int>& values,
-    const vector<double>& probabilities) {
+    TimedExecutor &executor, const vector<int> &values,
+    const vector<double> &probabilities) {
   constexpr int kN = 1000000;
   vector<int> results;
 
@@ -46,14 +55,14 @@ bool NonuniformRandomNumberGenerationRunner(
 }
 
 void NonuniformRandomNumberGenerationWrapper(
-    TimedExecutor& executor, const vector<int>& values,
-    const vector<double>& probabilities) {
+    TimedExecutor &executor, const vector<int> &values,
+    const vector<double> &probabilities) {
   RunFuncWithRetries(bind(NonuniformRandomNumberGenerationRunner,
                           std::ref(executor), std::cref(values),
                           std::cref(probabilities)));
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "values", "probabilities"};
   return GenericTestMain(args, "nonuniform_random_number.cc",

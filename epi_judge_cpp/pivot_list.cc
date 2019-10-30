@@ -7,14 +7,23 @@
 #include "test_framework/test_failure.h"
 #include "test_framework/timed_executor.h"
 using std::shared_ptr;
-shared_ptr<ListNode<int>> ListPivoting(const shared_ptr<ListNode<int>>& l,
-                                       int x) {
-  // TODO - you fill in here.
-  return nullptr;
+void AppendNode(shared_ptr<ListNode<int>> &prev, shared_ptr<ListNode<int>> &node) {
+  prev = prev->next = node;
+  node = node->next;
 }
-std::vector<int> ListToVector(const shared_ptr<ListNode<int>>& l) {
+
+shared_ptr<ListNode<int>> ListPivoting(const shared_ptr<ListNode<int>> &l,
+                                       int x) {
+  auto less = make_shared<ListNode<int>>(), equal = make_shared<ListNode<int>>(), curr = l;
+  auto greater = make_shared<ListNode<int>>(), dummy_less = less, dummy_equal = equal, dummy_greater = greater;
+  while (curr != nullptr)
+    AppendNode(curr->data < x ? less : curr->data == x ? equal : greater, curr);
+  greater->next = nullptr, equal->next = dummy_greater->next, less->next = dummy_equal->next;
+  return dummy_less->next;
+}
+std::vector<int> ListToVector(const shared_ptr<ListNode<int>> &l) {
   std::vector<int> v;
-  ListNode<int>* it = l.get();
+  ListNode<int> *it = l.get();
   while (it) {
     v.push_back(it->data);
     it = it->next.get();
@@ -22,8 +31,8 @@ std::vector<int> ListToVector(const shared_ptr<ListNode<int>>& l) {
   return v;
 }
 
-void ListPivotingWrapper(TimedExecutor& executor,
-                         const shared_ptr<ListNode<int>>& l, int x) {
+void ListPivotingWrapper(TimedExecutor &executor,
+                         const shared_ptr<ListNode<int>> &l, int x) {
   std::vector<int> original = ListToVector(l);
 
   std::shared_ptr<ListNode<int>> pivoted_list =
@@ -31,7 +40,7 @@ void ListPivotingWrapper(TimedExecutor& executor,
 
   std::vector<int> pivoted = ListToVector(pivoted_list);
   enum { kLess, kEq, kGreater } mode = kLess;
-  for (auto& i : pivoted) {
+  for (auto &i : pivoted) {
     switch (mode) {
       case kLess:
         if (i == x) {
@@ -60,7 +69,7 @@ void ListPivotingWrapper(TimedExecutor& executor,
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "l", "x"};
   return GenericTestMain(args, "pivot_list.cc", "pivot_list.tsv",

@@ -8,13 +8,17 @@ using std::vector;
 vector<int> PreorderTraversal(const unique_ptr<BinaryTreeNode<int>> &tree) {
   std::vector<int> result;
   std::stack<BinaryTreeNode<int> *> stack;
-  stack.emplace(tree.get());
-  while (!stack.empty()) {
-    auto curr = stack.top();
-    stack.pop();
-    if (curr)
-      result.push_back(curr->data), stack.push(curr->right.get()), stack.push(curr->left.get());
-  }
+  auto curr = tree.get();
+  stack.push(nullptr);
+  do {
+    if (curr) {
+      result.push_back(curr->data);
+      if (auto right = curr->right.get(); right)
+        stack.push(right);
+      curr = curr->left.get();
+    } else
+      curr = stack.top(), stack.pop();
+  } while (!stack.empty());
   return result;
 }
 

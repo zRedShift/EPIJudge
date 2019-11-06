@@ -2,8 +2,6 @@
 #include "test_framework/generic_test.h"
 #include "test_framework/serialization_traits.h"
 using std::vector;
-using std::isinf;
-using std::fabs;
 
 struct Point {
   int x, y;
@@ -11,11 +9,15 @@ struct Point {
     return x == rhs.x && y == rhs.y;
   }
 };
+
 namespace std {
 template<>
 struct hash<Point> {
   size_t operator()(const Point &p) const {
-    return (static_cast<size_t>(p.x) << 8 * sizeof(int)) + p.y;
+    if constexpr (2 * sizeof(int) <= sizeof(size_t))
+      return (static_cast<size_t>(p.x) << 8 * sizeof(int)) + p.y;
+    else
+      return size_t{37} * p.x + p.y;
   }
 };
 }
@@ -42,6 +44,7 @@ int FindLineWithMostPoints(const vector<Point> &points_vec) {
       result = std::max(result, lines.emplace(Slope(p->first, iter->first), p->second).first->second += iter->second);
   return result;
 }
+
 template<>
 struct SerializationTraits<Point> : UserSerTraits<Point, int, int> {};
 

@@ -3,7 +3,7 @@
 using std::vector;
 using std::array;
 
-int FindElementAppearsOnce(const vector<int> &A) {
+int FindElementAppearsOnceAlt(const vector<int> &A) {
   array<unsigned, 8 * sizeof(int)> hist{};
   for (unsigned x : A)
     for (int i = 0; x; x >>= 1u)
@@ -12,6 +12,16 @@ int FindElementAppearsOnce(const vector<int> &A) {
   for (unsigned i = 0; i < hist.size(); ++i)
     result |= (hist[i] % 3u) << i;
   return static_cast<int>(result);
+}
+
+int FindElementAppearsOnce(const vector<int> &A) {
+  unsigned lsb = 0, msb = 0;
+  for (const unsigned num : A) {
+    auto old = msb;
+    msb = (lsb ^ msb) & (msb ^ num);
+    lsb = (lsb ^ num) & ~old;
+  }
+  return static_cast<int>(lsb);
 }
 
 int main(int argc, char *argv[]) {

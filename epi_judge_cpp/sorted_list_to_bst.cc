@@ -11,14 +11,22 @@ using std::vector;
 // Returns the root of the corresponding BST. The prev and next fields of the
 // list nodes are used as the BST nodes left and right fields, respectively.
 // The length of the list is given.
-shared_ptr<ListNode<int>> BuildBSTFromSortedDoublyList(
-    shared_ptr<ListNode<int>> l, int length) {
-  // TODO - you fill in here.
-  return nullptr;
+shared_ptr<ListNode<int>> BuildBSTFromSortedDoublyList(shared_ptr<ListNode<int>> &l, int length) {
+  if (!length)
+    return nullptr;
+  if (length == 1) {
+    auto old = l;
+    l = l->next, old->prev = nullptr, old->next = nullptr;
+    return old;
+  }
+  auto prev = BuildBSTFromSortedDoublyList(l, length / 2);
+  l->prev = prev, prev = l, l = l->next;
+  prev->next = BuildBSTFromSortedDoublyList(l, (length - 1) / 2);
+  return prev;
 }
-void CompareVectorAndTree(const shared_ptr<ListNode<int>>& tree,
-                          vector<int>::const_iterator& current,
-                          const vector<int>::const_iterator& end) {
+void CompareVectorAndTree(const shared_ptr<ListNode<int>> &tree,
+                          vector<int>::const_iterator &current,
+                          const vector<int>::const_iterator &end) {
   if (!tree) {
     return;
   }
@@ -36,8 +44,8 @@ void CompareVectorAndTree(const shared_ptr<ListNode<int>>& tree,
   CompareVectorAndTree(tree->next, current, end);
 }
 
-void BuildBSTFromSortedDoublyListWrapper(TimedExecutor& executor,
-                                         const vector<int>& l) {
+void BuildBSTFromSortedDoublyListWrapper(TimedExecutor &executor,
+                                         const vector<int> &l) {
   shared_ptr<ListNode<int>> input_list;
   for (auto it = rbegin(l); it != rend(l); ++it) {
     input_list = make_shared<ListNode<int>>(*it, nullptr, input_list);
@@ -62,7 +70,7 @@ void BuildBSTFromSortedDoublyListWrapper(TimedExecutor& executor,
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "l"};
   return GenericTestMain(

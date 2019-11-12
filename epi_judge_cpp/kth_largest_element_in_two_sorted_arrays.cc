@@ -1,27 +1,20 @@
 #include <vector>
 #include "test_framework/generic_test.h"
 using std::vector;
+const int max_int = std::numeric_limits<int>::max(), min_int = std::numeric_limits<int>::min();
 
-int FindKthInTwoSortedArrays(const vector<int> &A, const vector<int> &B,
-                             int k) {
-  auto A_start = A.begin(), A_end = std::min(A.end(), A_start + k), B_start = B.begin(),
-      B_end = std::min(B.end(), B_start + k);
-  int A_size = std::min(int(A.size()), k), B_size = std::min(int(B.size()), k), size = A_size + B_size;
-  while (k != 1 && size != k && A_size && B_size) {
-    vector<int>::const_iterator A_mid, B_mid;
-    if (A_size > B_size)
-      B_mid = std::lower_bound(B_start, B_end, *(A_mid = A_start + A_size / 2));
+int FindKthInTwoSortedArrays(const vector<int> &A, const vector<int> &B, int k) {
+  int l = std::max(0, static_cast<int>(k - B.size())), h = std::min(k, static_cast<int>(A.size()));
+  while (l < h) {
+    int m = l + (h - l) / 2;
+    if (int A_m = m >= A.size() ? max_int : A[m], B_k_m_1 = k - m <= 0 ? min_int : B[k - m - 1]; A_m < B_k_m_1)
+      l = m + 1;
+    else if (int A_m_1 = m <= 0 ? min_int : A[m - 1], B_k_m = k - m >= B.size() ? max_int : B[k - m]; A_m_1 > B_k_m)
+      h = m - 1;
     else
-      A_mid = std::lower_bound(A_start, A_end, *(B_mid = B_start + B_size / 2));
-    if (int A_new = std::distance(A_start, A_mid), B_new = std::distance(B_start, B_mid); A_new + B_new < k)
-      k -= A_new + B_new, A_size -= A_new, B_size -= B_new, A_start = A_mid, B_start = B_mid;
-    else
-      A_size = A_new, B_size = B_new, A_end = A_mid, B_end = B_mid;
-    size = A_size + B_size;
+      return std::max(A_m_1, B_k_m_1);
   }
-  if (!A_size || !B_size)
-    return A_size ? *(A_start + k - 1) : *(B_start + k - 1);
-  return k == 1 ? std::min(*A_start, *B_start) : std::max(*(A_end - 1), *(B_end - 1));
+  return l > 0 ? k - l > 0 ? std::max(A[l - 1], B[k - l - 1]) : A[l - 1] : B[k - l - 1];
 }
 
 int main(int argc, char *argv[]) {

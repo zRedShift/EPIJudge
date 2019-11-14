@@ -22,6 +22,24 @@ int LongestMatchingParentheses(const string &s) {
   return 2 * std::max({max, prev, !stack.empty() ? *std::max_element(stack.begin(), stack.end()) : 0});
 }
 
+template<char paren, typename IterType>
+int Parse(const IterType &begin, const IterType &end) {
+  int max = 0, count = 0, curr = 0;
+  for (IterType i = begin; i != end; ++i)
+    if (*i == paren)
+      ++count, ++curr;
+    else if (curr) {
+      if (--curr, ++count; !curr)
+        max = std::max(max, count);
+    } else
+      curr = count = 0;
+  return max;
+}
+
+int LongestMatchingParenthesesAlt(const string &s) {
+  return std::max(Parse<'('>(s.cbegin(), s.cend()), Parse<')'>(s.crbegin(), s.crend()));
+}
+
 int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"s"};

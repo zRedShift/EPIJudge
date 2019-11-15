@@ -8,10 +8,15 @@
 using std::make_shared;
 using std::shared_ptr;
 
-shared_ptr<PostingListNode> CopyPostingsList(
-    const shared_ptr<PostingListNode>& l) {
-  // TODO - you fill in here.
-  return nullptr;
+shared_ptr<PostingListNode> CopyPostingsList(const shared_ptr<PostingListNode> &l) {
+  if (!l)
+    return nullptr;
+  auto iter = l, dummy_head = make_shared<PostingListNode>(0, nullptr, nullptr), p = dummy_head;
+  do {
+    p = p->next = make_shared<PostingListNode>(iter->order, nullptr, iter->jump);
+    iter->jump = p.get();
+  } while ((iter = iter->next));
+  return dummy_head->next;
 }
 using PostingListPtr = std::shared_ptr<PostingListNode>;
 
@@ -20,12 +25,13 @@ struct SerializedNode {
   int jump_index;
 };
 
-template <>
+template<>
 struct SerializationTraits<SerializedNode>
-    : UserSerTraits<SerializedNode, int, int> {};
+    : UserSerTraits<SerializedNode, int, int> {
+};
 
 PostingListPtr CreatePostingList(
-    const std::vector<SerializedNode>& serialized) {
+    const std::vector<SerializedNode> &serialized) {
   std::map<int, PostingListPtr> key_mapping;
   PostingListPtr head;
   for (auto it = rbegin(serialized); it != rend(serialized); ++it) {
@@ -44,8 +50,8 @@ PostingListPtr CreatePostingList(
   return head;
 }
 
-void AssertListsEqual(const PostingListPtr& orig, const PostingListPtr& copy) {
-  std::map<PostingListNode*, PostingListNode*> node_mapping;
+void AssertListsEqual(const PostingListPtr &orig, const PostingListPtr &copy) {
+  std::map<PostingListNode *, PostingListNode *> node_mapping;
   auto o_it = orig;
   auto c_it = copy;
   while (o_it) {
@@ -79,8 +85,8 @@ void AssertListsEqual(const PostingListPtr& orig, const PostingListPtr& copy) {
   }
 }
 
-void CopyPostingsListWrapper(TimedExecutor& executor,
-                             const std::vector<SerializedNode>& l) {
+void CopyPostingsListWrapper(TimedExecutor &executor,
+                             const std::vector<SerializedNode> &l) {
   auto head = CreatePostingList(l);
 
   auto copy = executor.Run([&] { return CopyPostingsList(head); });
@@ -88,7 +94,7 @@ void CopyPostingsListWrapper(TimedExecutor& executor,
   AssertListsEqual(head, copy);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "l"};
   return GenericTestMain(args, "copy_posting_list.cc", "copy_posting_list.tsv",

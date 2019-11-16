@@ -11,12 +11,19 @@ using std::shared_ptr;
 shared_ptr<PostingListNode> CopyPostingsList(const shared_ptr<PostingListNode> &l) {
   if (!l)
     return nullptr;
-  auto iter = l, dummy_head = make_shared<PostingListNode>(0, nullptr, nullptr), p = dummy_head;
+  shared_ptr<PostingListNode> iter = l, p = iter, new_list;
   do {
-    p = p->next = make_shared<PostingListNode>(iter->order, nullptr, iter->jump);
-    iter->jump = p.get();
-  } while ((iter = iter->next));
-  return dummy_head->next;
+    p = iter->next, iter->next = make_shared<PostingListNode>(iter->order, p, nullptr), iter = p;
+  } while (iter);
+  iter = l;
+  do {
+    p = iter->next, p->jump = iter->jump ? iter->jump->next.get() : nullptr, iter = p->next;
+  } while (iter);
+  iter = l, new_list = iter->next;
+  do {
+    p = iter->next, iter = iter->next = p->next, p->next = iter ? iter->next : nullptr;
+  } while (iter);
+  return new_list;
 }
 using PostingListPtr = std::shared_ptr<PostingListNode>;
 

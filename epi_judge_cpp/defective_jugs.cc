@@ -8,18 +8,18 @@ struct Jug {
 };
 bool CheckFeasible(const vector<Jug> &jugs, int L, int H) {
   int D = H - L + 1;
-  vector<vector<bool>> dp(L, vector<bool>(D, false));
-  dp[0][0] = true;
-  for (auto[l, d] : jugs) {
-    d -= l;
-    for (int i = 0; i < L; ++i)
-      for (int j = 0; j < D; ++j)
-        if (dp[i][j]) {
-          if (i + l < L && j + d < D)
-            dp[i + l][j + d] = true;
-          else if (i + l >= L && i + l + j + d <= H)
-            return true;
-        }
+  vector<std::pair<vector<int>, vector<bool>>> dp(L, {vector<int>{}, vector<bool>(D, false)});
+  dp[0].second[0] = true, dp[0].first.emplace_back(0);
+  for (auto[low, diff] : jugs) {
+    diff -= low;
+    for (int new_low = low; new_low < L; ++new_low)
+      for (const auto d : dp[new_low - low].first)
+        if (int new_diff = d + diff; new_diff < D && !dp[new_low].second[new_diff])
+          dp[new_low].second[new_diff] = true, dp[new_low].first.emplace_back(new_diff);
+    for (int i = std::max(0, L - low), new_low = i + low + diff; i < L; ++i, ++new_low)
+      for (const auto d : dp[i].first)
+        if (new_low + d <= H)
+          return true;
   }
   return false;
 }

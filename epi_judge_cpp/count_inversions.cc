@@ -2,12 +2,26 @@
 #include "test_framework/generic_test.h"
 using std::vector;
 
-int CountInversions(const vector<int> &A) {
-  int count = 0;
-  for (int i = 0; i < A.size(); ++i)
-    for (int j = i + 1; j < A.size(); ++j)
-      count += A[i] > A[j];
+int CountInversionsHelper(vector<int> &A, vector<int> &B, int start, int end) {
+  if (end - start < 2)
+    return 0;
+  int mid = start + (end - start) / 2, start2 = mid, curr = start;
+  int count = CountInversionsHelper(A, B, start, mid) + CountInversionsHelper(A, B, mid, end);
+  if (A[mid - 1] <= A[mid])
+    return count;
+  std::copy(&A[start], &A[end], &B[start]);
+  while (start < mid && start2 < end)
+    B[start] > B[start2] ? count += mid - start, A[curr++] = B[start2++] : A[curr++] = B[start++];
+  while (start < mid)
+    A[curr++] = B[start++];
+  while (start2 < end)
+    A[curr++] = B[start2++];
   return count;
+}
+
+int CountInversions(vector<int> A) {
+  vector<int> B(A.size());
+  return CountInversionsHelper(A, B, 0, A.size());
 }
 
 int main(int argc, char *argv[]) {

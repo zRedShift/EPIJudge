@@ -5,15 +5,24 @@
 #include "test_framework/test_failure.h"
 #include "test_framework/timed_executor.h"
 using std::shared_ptr;
-shared_ptr<BstNode<int>> BSTToDoublyLinkedList(
-    const shared_ptr<BstNode<int>>& tree) {
-  // TODO - you fill in here.
-  return nullptr;
-}
-std::vector<int> BSTToDoublyLinkedListWrapper(
-    TimedExecutor& executor, const std::shared_ptr<BstNode<int>>& tree) {
-  auto list = executor.Run([&] { return BSTToDoublyLinkedList(tree); });
 
+std::pair<shared_ptr<BstNode<int>>, shared_ptr<BstNode<int>>> Helper(const shared_ptr<BstNode<int>> &tree) {
+  if (!tree)
+    return {nullptr, nullptr};
+  auto left = Helper(tree->left), right = Helper(tree->right);
+  if (left.second)
+    left.second->right = tree, tree->left = left.second;
+  if (right.first)
+    right.first->left = tree, tree->right = right.first;
+  return {left.first ? left.first : tree, right.second ? right.second : tree};
+}
+
+shared_ptr<BstNode<int>> BSTToDoublyLinkedList(const shared_ptr<BstNode<int>> &tree) {
+  return Helper(tree).first;
+}
+
+std::vector<int> BSTToDoublyLinkedListWrapper(TimedExecutor &executor, const std::shared_ptr<BstNode<int>> &tree) {
+  auto list = executor.Run([&] { return BSTToDoublyLinkedList(tree); });
   if (list && list->left) {
     throw TestFailure(
         "Function must return the head of the list. Left link must be null");
@@ -29,7 +38,7 @@ std::vector<int> BSTToDoublyLinkedListWrapper(
   return v;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> param_names{"executor", "tree"};
   return GenericTestMain(
